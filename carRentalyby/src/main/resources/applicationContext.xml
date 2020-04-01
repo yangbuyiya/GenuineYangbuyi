@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--告知spring在创建容器时要扫描的包 注解扫描 -->
+	<context:component-scan base-package="com.yby.sys,com.yby.bus"  >
+	</context:component-scan>
+
+	<!-- 引入其它配置文件 -->
+	<import resource="classpath:application-dao.xml"/>
+    <!-- 方便引入dao里面的数据源 -->
+	<import resource="classpath:application-service.xml"/>
+	<import resource="classpath:application-task.xml"/>
+    <import resource="classpath:application-shiro.xml"/>
+</beans>
+
+
+

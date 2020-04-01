@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yby.sys.mapper.PermissionMapper">
+    <resultMap id="BaseResultMap" type="com.yby.sys.domain.Permission">
+        <id column="pid" jdbcType="BIGINT" property="pid"/>
+        <result column="pname" jdbcType="VARCHAR" property="pname"/>
+        <result column="presource" jdbcType="VARCHAR" property="presource"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    pid, pname, presource
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_permission
+        where pid = #{pid,jdbcType=BIGINT}
+    </select>
+
+
+    <select id="queryPermissionByUserId" resultType="java.lang.String">
+            select distinct t1.presource from
+            sys_permission t1
+            INNER JOIN
+            sys_role_permission t2
+            INNER JOIN
+            sys_role_user t3
+            on (t1.pid = t2.pid and t2.rid=t3.rid)
+            where t3.uid = #{userid}
+    </select>
+
+    <!-- 查询权限 -->
+    <!--
+
+     select * from sys_permission
+        <where>
+            <if test="pname != null and pname != ''">
+                and pname like concat("%",#{pname},"%")
+            </if>
+            <if test="presource != null and presource != ''">
+                and presource like concat("%",#{presource},"%")
+            </if>
+        </where>
+
+
+           select DISTINCT t4.*  from sys_menu t1
+        INNER JOIN sys_role_menu t2
+        INNER JOIN sys_role_permission t3
+        INNER JOIN sys_permission t4
+        ON t1.id = t2.mid
+        and t2.rid = t3.rid
+        <where>
+            <if test="pname != null and pname != ''">
+                and pname like concat("%",#{pname},"%")
+            </if>
+            <if test="presource != null and presource != ''">
+                and presource like concat("%",#{presource},"%")
+            </if>
+        </where>
+        and id = #{mid}
+
+
+        select * from sys_permission
+        <where>
+            <if test="pname != null and pname != ''">
+                and pname like concat("%",#{pname},"%")
+            </if>
+            <if test="presource != null and presource != ''">
+                and presource like concat("%",#{presource},"%")
+            </if>
+        </where>
+
+
+
+
+
+        select distinct t1.* from
+        sys_permission t1
+        INNER JOIN
+        sys_role_permission t2
+        INNER JOIN
+        sys_role_user t3
+        on (t1.pid = t2.pid and t2.rid=t3.rid)
+        <where>
+            <if test="pname != null and pname != ''">
+                and t1.pname like concat("%",#{pname},"%")
+            </if>
+            <if test="presource != null and presource != ''">
+                and t1.presource like concat("%",#{presource},"%")
+            </if>
+        </where>
+        and t3.uid = #{uid}
+
+    -->
+    <select id="queryAllPermission" resultType="com.yby.sys.domain.Permission">
+
+        select * from sys_permission
+        <where>
+            <if test="pname != null and pname != ''">
+                and t1.pname like concat("%",#{pname},"%")
+            </if>
+            <if test="presource != null and presource != ''">
+                and t1.presource like concat("%",#{presource},"%")
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from sys_permission
+    where pid = #{pid,jdbcType=BIGINT}
+  </delete>
+
+    <!-- 批量删除 角色 与权限的 关系  -->
+    <delete id="deletePermissionRole">
+ delete from sys_role_permission
+   where rid = #{integer}  and pid = #{aLong}
+    </delete>
+    <insert id="insert" parameterType="com.yby.sys.domain.Permission">
+    insert into sys_permission (pid, pname, presource
+      )
+    values (#{pid,jdbcType=BIGINT}, #{pname,jdbcType=VARCHAR}, #{presource,jdbcType=VARCHAR}
+      )
+  </insert>
+    <insert id="insertSelective" parameterType="com.yby.sys.domain.Permission">
+        insert into sys_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pid != null">
+                pid,
+            </if>
+            <if test="pname != null">
+                pname,
+            </if>
+            <if test="presource != null">
+                presource,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pid != null">
+                #{pid,jdbcType=BIGINT},
+            </if>
+            <if test="pname != null">
+                #{pname,jdbcType=VARCHAR},
+            </if>
+            <if test="presource != null">
+                #{presource,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.yby.sys.domain.Permission">
+        update sys_permission
+        <set>
+            <if test="pname != null">
+                pname = #{pname,jdbcType=VARCHAR},
+            </if>
+            <if test="presource != null">
+                presource = #{presource,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where pid = #{pid,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.yby.sys.domain.Permission">
+    update sys_permission
+    set pname = #{pname,jdbcType=VARCHAR},
+      presource = #{presource,jdbcType=VARCHAR}
+    where pid = #{pid,jdbcType=BIGINT}
+  </update>
+
+
+    <insert id="addPermission" useGeneratedKeys="true"
+            keyColumn="pid"
+            keyProperty="pid">
+         insert into sys_permission (pname, presource)
+          values
+          (#{pname},#{presource})
+    </insert>
+
+    <insert id="addPermissionRole">
+          insert into sys_role_permission (rid, pid)
+          values
+          (#{id},#{pid})
+    </insert>
+
+
+    <select id="queryByPresource" resultType="com.yby.sys.domain.Permission">
+          select pid, pname, presource from sys_permission
+          where presource = #{presource}
+
+    </select>
+
+    <resultMap id="BasequerypermissionPname" type="com.yby.sys.utils.DataXSelect">
+        <id column="pid" jdbcType="INTEGER" property="value"/>
+        <result column="pname" jdbcType="VARCHAR" property="name"/>
+    </resultMap>
+
+    <select id="permissionPname" resultMap="BasequerypermissionPname">
+         select pid, pname from sys_permission
+    </select>
+
+
+    <resultMap id="Basequerypermissionpresource" type="com.yby.sys.utils.DataXSelect">
+        <id column="pid" jdbcType="INTEGER" property="value"/>
+        <result column="presource" jdbcType="VARCHAR" property="name"/>
+    </resultMap>
+
+    <select id="permissionPresource" resultMap="Basequerypermissionpresource">
+         select pid, presource from sys_permission
+    </select>
+
+    <select id="queryPermissionByUserIdandpname" resultMap="BasequerypermissionPname">
+           select distinct t1.pid as pid, t1.pname as pname from
+            sys_permission t1
+            INNER JOIN
+            sys_role_permission t2
+            INNER JOIN
+            sys_role_user t3
+            on (t1.pid = t2.pid and t2.rid=t3.rid)
+            where t3.uid = #{userid}
+    </select>
+
+</mapper>

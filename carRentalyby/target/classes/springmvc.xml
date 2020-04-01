@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 扫描基础controller -->
+    <context:component-scan
+        base-package="com.yby.sys.controller" />
+    <!-- 扫描车辆 -->
+    <context:component-scan
+        base-package="com.yby.bus.controller" />
+    <!-- 扫描统计分析 -->
+    <context:component-scan
+        base-package="com.yby.stat.controller" />
+    <!-- 配置映射器和适配器 -->
+    <mvc:annotation-driven />
+
+    <!-- 注解授权：AOP式方法级权限检查  -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true" />
+    </bean>
+
+    <!--  配置拦截器  -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 拦截全部 -->
+            <mvc:mapping path="/*"/>
+            <!-- 注入拦截器 -->
+            <bean class="com.yby.sys.inerceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!-- 配置前端视图解析器 -->
+    <bean
+        class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!-- 注入前后缀 -->
+        <property name="prefix" value="/WEB-INF/view/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+
+    <!-- 配置springmvc对文件上传的支持 -->
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 设置文件名的编码 -->
+        <property name="defaultEncoding" value="utf-8" />
+        <!-- 配置最上传文件的支持 20M -->
+        <property name="maxUploadSize" value="20971520" />
+    </bean>
+
+    <!-- 设置静态资源不过滤 -->
+    <mvc:resources location="/css/" mapping="/css/**"/>
+    <mvc:resources location="/images/" mapping="/images/**"/>
+    <mvc:resources location="/js/" mapping="/js/**"/>
+
+    <!-- 配置静态文件放行 -->
+    <mvc:default-servlet-handler/>
+
+
+    <!-- 出现异常管理 -->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="java.lang.ArithmeticException">mvcArithmeticExceptionPage</prop>
+                <prop key="java.lang.Throwable">mvcErrorPage</prop>
+            </props>
+        </property>
+    </bean>
+
+
+</beans>

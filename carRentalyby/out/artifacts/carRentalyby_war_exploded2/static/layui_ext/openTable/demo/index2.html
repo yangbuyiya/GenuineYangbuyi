@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>表格可展开显示更多列-demo-完整版</title>
+	<meta name='renderer' content='webkit'>
+	<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+	<meta name='viewport'
+				content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0'>
+	<link rel='stylesheet' href='../../../layui/css/layui.css' media='all'>
+	<style>
+		body {
+			padding: 40px;
+		}
+
+		.layui-card-header > span {
+			font-weight: bold;
+			font-size: 18px;
+			color: #0C0C0C;
+		}
+
+		.open-new {
+			font-size: 14px;
+			border-bottom: #dedede solid 1px;
+			margin-left: 80px;
+		}
+
+	</style>
+</head>
+<body>
+<div class='layui-card'>
+	<div class='layui-card-header'>
+		<span>可展开表格Demo <span class="layui-badge layui-bg-green">完整版</span></span>
+		<a href="index1.html" class="open-new">简单版</a></div>
+</div>
+<div class='layui-card-body'>
+	<table id='test' lay-filter='test'></table>
+	<pre class='layui-code'></pre>
+
+</div>
+</div>
+
+<script type='text/html' id='barDemo'>
+	<a class='layui-btn layui-btn-xs' lay-event='edit'>编辑</a>
+	<a class='layui-btn layui-btn-danger layui-btn-xs' lay-event='del'>删除</a>
+</script>
+<script src='../../../layui/layui.js'></script>
+<script id='demo-script'>
+
+
+  //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 说明 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+
+  // 1、支持layui table 的所有参数
+
+  //2、扩展参数4个：
+  // openCols:[]
+  // sort:f
+  // edit:f
+  // openType
+  // 详见下面案例
+
+
+  //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 使用案例 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+
+  layui.config({
+    //配置 layui 第三方扩展组件存放的基础目录
+    base: '../../../layui_exts/'
+  }).extend({
+    openTable: 'openTable/openTable'
+  }).use(['openTable'], function () {
+    var openTable = layui.openTable;
+    openTable.render({
+      elem: '#test'
+      , id: '#test'
+      , url: 'test.json'
+      , cols: [[
+        {field: 'id', title: 'ID', sort: true}
+        , {field: 'username', title: '用户名', edit: true}
+        , {field: 'city', title: '城市', edit: true}
+        , {title: '操作', toolbar: '#barDemo', width: 150}
+      ]]
+
+      //注：展开的列Items
+      , openCols: [
+        //  1、普通文本
+        {field: 'sign', title: '签名'}
+
+        //	2、自定义渲染内容
+        , {
+          field: 'wealth', width: 137, title: '财富', templet: function (item) {
+            var arr = [];
+            arr.push('<span class="openTable-item-title">财富：</span>' + '<span>' + item.wealth + '</span>');
+
+            if (item.wealth < 100000) {
+              arr.push('<span class="layui-badge" style="margin-left: 6px">农民</span>')
+            } else {
+              arr.push('<span class="layui-badge" style="margin-left: 6px">富豪</span>')
+            }
+            return arr.join('');
+          }
+        }
+        //  3、可修改
+        , {field: 'experience', title: '积分', edit: true}
+        //	4、可选择的类型 select
+        , {
+          field: 'classifyName',
+          title: '职业',
+          type: 'select',
+          items: getTestItems(),
+          /**
+           * 绘制 <option></option>  回调
+           * @param it （循环items参数时的子项）
+           * @param data 当前表格数据
+           * @returns {{isSelect: boolean, id: *, value: *}} 统一返回使用参数
+           */
+          onDraw: function (it, data) {
+            return {id: it.id, value: it.title, isSelect: (it.id === data.classifyId)};
+
+          },
+          /**
+           *发生选择时回调
+           * @param it 下拉选择数据
+           * @param item 当前表格数据
+           * @returns {boolean} true ：代表发生了修改 会回调 edit()相反则不会
+           *
+           * 这样设计考虑到实际环境可能做不到统一
+           */
+          onSelect: function (it, item) {
+            console.log(it.value, item["classifyId"]);
+            //选中的value !=默认数据代表被修改
+            return parseInt(it.value) !== parseInt(item["classifyId"]);
+          }
+        }
+      ]
+
+      //注：监听排序 {openTable}
+      , sort: function (obj) {
+        console.log(obj)
+      }
+
+      //注：监听修改 {openTable}
+      , edit: function (obj) {
+        layer.msg("修改内容已打印在控制台");
+        console.log(obj)
+        // 发起 ajax
+        // layui.table.reload('#test');
+      }
+
+      //注：0：同时只展开一项 1：一直展开不关闭之前  def：0 {openTable}
+      , openType: 0
+
+    });
+
+
+    function getTestItems() {
+      return [{id: 1, title: '作家'}, {id: 2, title: '诗人'}, {id: 3, title: '酱油'}, {id: 4, title: '校长'}];
+    }
+
+
+    //注：更新样例代码格式化展示 实际开发可忽略不管
+    setTimeout(function () {
+      layui.$('.layui-code').text(layui.$('#demo-script').html())
+    }, 20)
+  });
+</script>
+</body>
+</html>
+
+

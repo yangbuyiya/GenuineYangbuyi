@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN"
+        "http://getahead.org/dwr/dwr20.dtd">
+<dwr>
+<allow>
+    <create creator="spring" javascript="dwrUtil">
+        <param name="beanName" value="dwrUtil" />
+    </create>
+    <convert converter="bean" match="com.zjsystem.basic.permissions.notices.pageModel.NoticePage" />
+    <convert converter="bean" match="com.zjsystem.framework.dwr.bean.DwrMsg" />
+    <convert converter="exception" match="java.lang.Exception" />
+    <convert converter="bean" match="java.lang.StackTraceElement" />
+    <convert converter="bean" match="zj.common.KV" />
+</allow>
+</dwr>

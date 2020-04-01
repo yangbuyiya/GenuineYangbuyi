@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         id="WebApp_ID" version="3.1">
+    <display-name>carRentalyby</display-name>
+
+
+    <!-- 编码过滤器开始 -->
+    <filter>
+        <filter-name>EncodeingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>EncodeingFilter</filter-name>
+        <servlet-name>springmvc</servlet-name>
+    </filter-mapping>
+    <!-- 编码过滤器结束 -->
+
+    <!-- 拦截到所有请求,使用spring一个bean来进行处理 -->
+    <!-- 登录拦截进行权限控制 -->
+    <!-- 作用是：
+           判断进行了认证没
+           没有则跳转到指定页面
+     -->
+    <filter>
+        <filter-name>shiroFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+        <!-- 是否filter中的init和 destroy-->
+        <init-param>
+            <param-name>targetFilterLifecycle</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>shiroFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <!-- 监听器开始 -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+    <!-- 监听器结束 -->
+
+
+    <!-- 前端控制器开始 -->
+    <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:springmvc.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <!-- 前端控制器结束 -->
+
+
+    <!--druid的监控页面的配置-->
+    <servlet>
+        <servlet-name>StatViewServlet</servlet-name>
+        <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+        <!--配置登陆名-->
+        <init-param>
+            <param-name>loginUsername</param-name>
+            <param-value>root</param-value>
+        </init-param>
+        <!--配置密码-->
+        <init-param>
+            <param-name>loginPassword</param-name>
+            <param-value>123456</param-value>
+        </init-param>
+        <!--设置白名单-->
+        <init-param>
+            <param-name>allow</param-name>
+            <!-- 设置指定才能访问  kon为都可以访问  多个逗号隔开 -->
+            <param-value></param-value>
+        </init-param>
+        <!--设置黑名单-->
+        <init-param>
+            <param-name>deny</param-name>
+            <param-value></param-value>
+        </init-param>
+    </servlet>
+
+    <!-- 映射 -->
+    <servlet-mapping>
+        <servlet-name>StatViewServlet</servlet-name>
+        <!-- 访问德鲁伊监控地址 -->
+        <url-pattern>/druid/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- 过滤器 -->
+    <filter>
+        <filter-name>WebStatFilter</filter-name>
+        <filter-class>com.alibaba.druid.support.http.WebStatFilter</filter-class>
+        <!-- 注入过滤的样式文件 -->
+        <init-param>
+            <param-name>exclusions</param-name>
+            <param-value>*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>WebStatFilter</filter-name>
+        <servlet-name>StatViewServlet</servlet-name>
+    </filter-mapping>
+
+    <!-- druid的监控页面的配置结束 -->
+
+
+    <!-- 需要访问的资源不存在 -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/view/system/exception/404.jsp</location>
+    </error-page>
+    <!-- 出现异常 没有这个将会直接服务器异常 因为这个也是服务器里面的 -->
+    <error-page>
+        <exception-type>java.lang.ArithmeticException</exception-type>
+        <location>/WEB-INF/view/system/exception/webExceptionPage.jsp</location>
+    </error-page>
+    <!-- 服务器内部错误 -->
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/view/system/exception/500.jsp</location>
+    </error-page>
+
+
+
+    <!-- Servlet add by zhangjun start -->
+    <servlet>
+        <servlet-name>dwr-invoker</servlet-name>
+        <servlet-class>org.directwebremoting.servlet.DwrServlet</servlet-class>
+        <!-- 前台输入地址是否显示 -->
+        <init-param>
+            <param-name>debug</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>pollAndCometEnabled</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <description>使用服务器推技术(反转AJAX)</description>
+            <param-name>activeReverseAjaxEnabled</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>initApplicationScopeCreatorsAtStartup</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>scriptSessionTimeout</param-name>
+            <param-value>21600000</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxWaitAfterWrite</param-name>
+            <param-value>100</param-value>
+        </init-param>
+        <init-param>
+            <param-name>crossDomainSessionSecurity</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dwr-invoker</servlet-name>
+        <url-pattern>/dwr/*</url-pattern>
+    </servlet-mapping>
+    <!-- Servlet add by zhangjun start -->
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+     http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+">
+    <!-- 创建过滤器  表单监听的过滤器 -->
+    <bean id="myFormFilter" class="com.yby.sys.filter.MyFormFilter">
+        <!-- 配置表单中账号的input名称 -->
+        <property name="usernameParam" value="loginname"/>
+        <!-- 配置表单中密码的input名称 -->
+        <property name="passwordParam" value="pwd"/>
+    </bean>
+
+    <!-- 配置shiro过滤器 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!--
+         其它的请求  或判断  当前有没有认证过  默认情况下 没有认证  或跳转到login.jsp
+
+         地址栏输入：index 其它地址
+         默认情况下，没有认证  会跳转到login.jsp
+         配置了LoginUr的话 它会去进行认证 如果 你没有进行认证 就会执行对应的login请求  就是Controller
+
+         地址栏输入：login  指定 不拦截请求
+        loginUrl：如果发现请求是loginUrl  会去做认证
+        配置登录认证的路径
+        <property name="loginUrl" value="/login"/>
+         -->
+        <property name="loginUrl" value="/login/login"/>
+
+        <!-- 配置表单监听的过滤器 -->
+        <property name="filters">
+            <map>
+                <entry key="authc" value-ref="myFormFilter"/>
+            </map>
+        </property>
+
+        <!-- 交给Spring管理 安全管理器 -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 配置shiro过滤器pattern -->
+        <property name="filterChainDefinitions">
+            <value>
+                /static/** = anon   <!--不需要登录验证-->
+                /system/main/login.jsp = anon   <!--不需要登录验证 这里跳转 -->
+                /system/menu/** = anon   <!--不需要登录验证 这里跳转 -->
+                /druid/** = anon          <!-- 放出德鲁伊监控 -->
+                /logout = logout    <!-- 取消认证 退出 -->
+                /**=authc     <!--除指定请求外,其它所有的请求都需要身份验证-->
+            </value>
+        </property>
+    </bean>
+
+
+    <!-- 自定义Realm交给安全管理器 -->
+    <bean id="sysUserRealm" class="com.yby.sys.realm.SysUserRealm">
+        <!-- 配置凭证匹配器 -->
+        <property name="credentialsMatcher" ref="credentialsMatcher"/>
+    </bean>
+    <!-- 凭证匹配器 -->
+    <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <!-- 散列算法 -->
+        <property name="hashAlgorithmName" value="md5"/>
+        <!-- 散列次数 -->
+        <!--<property name="hashIterations" value="2"/>-->
+    </bean>
+
+    <!-- 缓存管理器 -->
+    <bean id="ehCache" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:shiro-ehcache.xml"/>
+    </bean>
+
+    <!-- 配置shiro安全管理器 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- 指定employeeRealm  注入realm -->
+        <property name="realm" ref="sysUserRealm"/>
+        <!-- 注入缓存器 -->
+        <property name="cacheManager" ref="ehCache"/>
+    </bean>
+
+
+    <!--
+    以下配置都是controller当中的权限注解需要
+
+    配置为true即使用cglib继承的方式,
+    false为jdk的接口动态代理   控制器没有实现接口
+    -->
+    <aop:config proxy-target-class="true"/>  <!-- 启用cglib代理 -->
+    <!-- 使用第三方去扫描shiro的注解 -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor ">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+</beans>

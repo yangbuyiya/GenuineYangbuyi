@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!-- 声明凭证匹配器 -->
+    <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <!-- 算法 -->
+        <property name="hashAlgorithmName" value="md5"/>
+        <!-- 散列次数 -->
+        <property name="hashIterations" value="2"/>
+    </bean>
+    <!-- 声明一个cookie的对象 -->
+    <bean id="cookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <!-- 构造名称固定的写法 -->
+        <constructor-arg value="rememberMe"></constructor-arg>
+        <!-- 只有http请求才会生效 -->
+        <property name="httpOnly" value="true"></property>
+        <!-- 设置cookie的存活时间  单位是秒 -->
+        <property name="maxAge" value="604800"></property>
+    </bean>
+
+    <!-- 声明一个cookie管理器 -->
+    <bean id="cookieManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cookie" ref="cookie"></property>
+    </bean>
+
+
+    <!-- 配置工厂 SecurityManager 安全管理器 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- 注入realm -->
+        <property name="realm" ref="userRealm"/>
+        <!-- 注入缓存器 -->
+        <property name="cacheManager" ref="ehCache"/>
+        <!-- 注入一个记住我的管理器 -->
+        <property name="rememberMeManager" ref="cookieManager" />
+    </bean>
+
+    <!-- 声明自定义realm -->
+    <bean id="userRealm" class="com.yby.sys.realm.SysUserRealm">
+        <!-- 注入凭证匹配器 -->
+        <property name="credentialsMatcher" ref="credentialsMatcher"/>
+    </bean>
+
+    <!-- 注入自定义的过滤器记住我的功能处理session内空丢失的问题 -->
+    <bean id="rememberMe" class="com.yby.sys.filter.RememberMeFilter"></bean>
+
+    <!-- 配置Shiro的过滤器 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 注入安全管理器 -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 注入未登录的跳转页面 -->
+        <property name="loginUrl" value="/index.jsp"/>
+        <!-- 注入未授权的跳转页面 -->
+        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+        <!-- 注入自定义的过滤器记住我的功能处理session内空丢失的问题 -->
+        <property name="filters">
+            <map>
+                <!-- 取名称 用来使用 -->
+                <entry key="rememberMe" value-ref="rememberMe"></entry>
+            </map>
+        </property>
+        <!-- 配置过滤器链 -->
+        <property name="filterChainDefinitions">
+            <value>
+                <!-- 放行index.jsp -->
+                /index.jsp* = anon
+                /yangbuyi/index.jsp* = anon
+                <!-- 放行验证码 -->
+                /login/getCode = anon
+                <!-- 放行资源文件 -->
+                /static/** = anon
+                <!-- 放行导出客户 -->
+                /stat/exportCustomer = anon
+                <!-- 放行跳转到登陆页面的路径 -->
+                /login/toLogin* = anon
+                <!-- 放行登陆的请求 -->
+                /login/login*=anon
+                <!-- 设置退出的路径 -->
+                /login/logout* = logout
+                <!--设置记住我 有用户则走这个 rememberMe 解决session数据丢失-->
+                /**=rememberMe,user
+                <!-- 设置其它路径全部拦截 -->
+                /*=authc
+                /*/*=authc
+            </value>
+        </property>
+
+
+    </bean>
+
+
+    <!-- 缓存管理器 -->
+    <bean id="ehCache" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:shiro-ehcache.xml"/>
+    </bean>
+
+
+    <!--
+       以下配置都是controller当中的权限注解需要
+
+       配置为true即使用cglib继承的方式,
+       false为jdk的接口动态代理   控制器没有实现接口
+       -->
+    <!--<aop:config proxy-target-class="true"/>  &lt;!&ndash; 启用cglib代理 &ndash;&gt;
+    &lt;!&ndash; 使用第三方去扫描shiro的注解 &ndash;&gt;
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor ">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>-->
+
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 注解授权：AOP式方法级权限检查  -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true"/>
+    </bean>
+
+    <!-- 授权属性源顾问 -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+</beans>
